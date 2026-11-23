@@ -120,18 +120,49 @@ function collectLeafLayers(
   }
 }
 
-function looksLikeCharacterGroup(layer: Layer): boolean {
-  if (!layer.children || layer.children.length === 0) return false;
-  // A character group usually has leaf layers like Body/Head/Hair or Face/Head subgroups,
-  // whereas a category folder (like NPC, Char) only contains character groups.
-  const hasLeaf = layer.children.some((c) => !c.children || c.children.length === 0);
-  if (hasLeaf) return true;
-  // Or it has a Face/Head subgroup
-  return layer.children.some((c) => /^(face|head|01_head)$/i.test((c.name ?? '').trim()));
+const PART_SUBGROUP_RE =
+  /^(\d+[_\s-]|face|head|body|hair|arm|leg|hand|foot|eye|brow|mouth|ear|nose|cloth|skirt|coat|weapon|prop|wing|tail|shadow|fx|effect)/i;
+
+function isCategoryOrContainerGroup(layer: Layer): boolean {
+  const children = layer.children ?? [];
+  if (children.length === 0) return false;
+  // Direct leaf layers mean this group is a rig root itself, not a category/character wrapper.
+  const hasDirectLeaf = children.some((c) => !c.children || c.children.length === 0);
+  if (hasDirectLeaf) return false;
+
+  // If children are body-part subgroups (e.g. Face, Head, 01_Body), this group is the rig root.
+  // Otherwise (e.g. Char -> Akane -> 001aka-n, NPC -> Haqua -> haqua-n), keep unwrapping.
+  const hasPartSubgroup = children.some((c) => PART_SUBGROUP_RE.test((c.name ?? '').trim()));
+  return !hasPartSubgroup;
+}
+
+interface RigRootEntry {
+  layer: Layer;
+  hidden: boolean;
+  parentName?: string;
+}
+
+function collectRigRoots(
+  layers: Layer[] | undefined,
+  parentHidden: boolean,
+  parentName: string | undefined,
+  out: RigRootEntry[]
+) {
+  if (!layers) return;
+  for (const layer of layers) {
+    if (!layer.children || layer.children.length === 0) continue;
+    const isHidden = parentHidden || Boolean(layer.hidden);
+    if (isCategoryOrContainerGroup(layer)) {
+      collectRigRoots(layer.children, isHidden, layer.name ?? parentName, out);
+    } else {
+      out.push({ layer, hidden: isHidden, parentName });
+    }
+  }
 }
 
 export interface PsdCharacterEntry {
   name: string;
+  parentName?: string;
   hidden: boolean;
   layerCount: number;
   character: Character;
@@ -151,32 +182,24 @@ export function importPsdBuffer(buffer: ArrayBuffer | Uint8Array): {
 
   const canvasWidth = psd.width;
   const canvasHeight = psd.height;
-  const charGroups: Layer[] = [];
+  const rigRoots: RigRootEntry[] = [];
 
-  for (const top of psd.children ?? []) {
-    if (!top.children || top.children.length === 0) continue;
-    if (looksLikeCharacterGroup(top)) {
-      charGroups.push(top);
-    } else {
-      for (const sub of top.children) {
-        if (sub.children && sub.children.length > 0) {
-          charGroups.push(sub);
-        }
-      }
-    }
-  }
+  collectRigRoots(psd.children, false, undefined, rigRoots);
 
   // Fallback: if no groups found, treat entire PSD as one character
-  if (charGroups.length === 0 && (psd.children?.length ?? 0) > 0) {
-    charGroups.push({
-      name: 'Character',
-      children: psd.children,
+  if (rigRoots.length === 0 && (psd.children?.length ?? 0) > 0) {
+    rigRoots.push({
+      layer: {
+        name: 'Character',
+        children: psd.children,
+      },
+      hidden: false,
     });
   }
 
   const entries: PsdCharacterEntry[] = [];
 
-  for (const grp of charGroups) {
+  for (const { layer: grp, hidden: grpHidden, parentName } of rigRoots) {
     const charName = grp.name ?? 'Character';
     const rawLayers: RawLayerPart[] = [];
     collectLeafLayers(grp.children, [], rawLayers, { value: 0 });
@@ -225,7 +248,8 @@ export function importPsdBuffer(buffer: ArrayBuffer | Uint8Array): {
 
     entries.push({
       name: charName,
-      hidden: Boolean(grp.hidden),
+      parentName,
+      hidden: grpHidden,
       layerCount: parts.length,
       character: rigged,
     });

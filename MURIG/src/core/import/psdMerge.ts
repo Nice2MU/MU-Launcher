@@ -120,6 +120,7 @@ function mergeCharacter(
   // while all bones, partGroups, params, and clips remain intact.
   return {
     ...oldChar,
+    name: newChar.name,
     canvasWidth: newChar.canvasWidth,
     canvasHeight: newChar.canvasHeight,
     parts: mergedParts,
@@ -143,13 +144,24 @@ export function mergePsdIntoProject(
   };
 
   const entryByName = new Map<string, PsdCharacterEntry>();
+  const entryByParent = new Map<string, PsdCharacterEntry>();
   for (const e of entries) {
     entryByName.set(e.name.toLowerCase(), e);
+    if (e.parentName && !entryByParent.has(e.parentName.toLowerCase())) {
+      entryByParent.set(e.parentName.toLowerCase(), e);
+    }
   }
 
   const matchedNames = new Set<string>();
   const nextChars: Character[] = project.characters.map((ch) => {
-    const entry = entryByName.get(ch.name.toLowerCase());
+    const key = ch.name.toLowerCase();
+    let entry = entryByName.get(key);
+    if (!entry) {
+      const parentMatch = entryByParent.get(key);
+      if (parentMatch && !matchedNames.has(parentMatch.name.toLowerCase())) {
+        entry = parentMatch;
+      }
+    }
     if (!entry) return ch;
     matchedNames.add(entry.name.toLowerCase());
     return mergeCharacter(ch, entry.character, summary);
