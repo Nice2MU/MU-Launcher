@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "MURIG",
+      "path": "/Users/nice2mu/Desktop/MU Launcher/MURIG/MURIG.app",
+      "category": "Rigging & Animation",
+      "description": "2D PSD Character Rigging, Mesh Skinning & Animation Studio.",
+      "pinned": false,
+      "custom": false,
+      "mcpPort": 7820
+    }
+  ]
+}
