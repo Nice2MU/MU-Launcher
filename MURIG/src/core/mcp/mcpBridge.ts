@@ -64,7 +64,7 @@ async function executeMcpTool(tool: string, args: Record<string, unknown>): Prom
   const ch = selectActiveCharacter(state);
 
   if (!ch && tool !== 'render_preview') {
-    return { error: 'No active character loaded in MURIG' };
+    return { error: 'No active character loaded in MURig' };
   }
 
   switch (tool) {

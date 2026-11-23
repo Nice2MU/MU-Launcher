@@ -76,7 +76,7 @@ fn collect_apps(dir: &Path, depth: usize, out: &mut Vec<DiscoveredApp>) {
         if path.is_dir() {
             if fname.ends_with(".app") {
                 let name = fname.trim_end_matches(".app").to_string();
-                let mcp_port = if name.eq_ignore_ascii_case("MURIG") {
+                let mcp_port = if name.eq_ignore_ascii_case("MURig") {
                     Some(7820)
                 } else {
                     None

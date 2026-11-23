@@ -3,7 +3,7 @@
 ชุดเครื่องมือสำหรับจัดการและสร้างแอนิเมชันตัวละคร 2D บน macOS ประกอบด้วย 2 โปรเจคหลักในที่เดียว:
 
 1. **MU Launcher** (`launcher/`) — ตัวจัดการและเปิด-ปิดแอปในสตูดิโอ พร้อมเช็คสถานะการทำงานแบบเรียลไทม์
-2. **MURIG v1.0.1** (`MURIG/`) — โปรแกรมทำ 2D Character Rigging, Mesh Skinning และ Animation พร้อมระบบ Export สำหรับเกม (Unity)
+2. **MURig v1.0.1** (`MURig/`) — โปรแกรมทำ 2D Character Rigging, Mesh Skinning และ Animation พร้อมระบบ Export สำหรับเกม (Unity)
 
 ---
 
@@ -12,7 +12,7 @@
 ```text
 MU Launcher/
 ├── launcher/        # ซอร์สโค้ด MU Launcher (React + Vite + Tauri)
-├── MURIG/           # ซอร์สโค้ด MURIG 2D Rigging Studio (React + PixiJS + Tauri)
+├── MURig/           # ซอร์สโค้ด MURig 2D Rigging Studio (React + PixiJS + Tauri)
 ├── .gitignore       # กรอง node_modules, dist, target และ .app ออกจาก Git
 └── README.md
 ```
@@ -27,7 +27,7 @@ MU Launcher/
 
 ---
 
-## 2. MURIG (v1.0.1)
+## 2. MURig (v1.0.1)
 
 โปรแกรม Rig ตัวละคร 2D จากไฟล์ Photoshop (`.psd`):
 
@@ -50,8 +50,8 @@ MU Launcher/
 # MU Launcher
 cd launcher && npm install && npm run tauri dev
 
-# MURIG
-cd MURIG && npm install && npm run tauri dev
+# MURig
+cd MURig && npm install && npm run tauri dev
 ```
 
 ### คอมไพล์เป็นไฟล์ `.app`
@@ -59,7 +59,7 @@ cd MURIG && npm install && npm run tauri dev
 # MU Launcher
 cd launcher && npm run tauri build -- --bundles app
 
-# MURIG
-cd MURIG && npm run tauri build -- --bundles app
+# MURig
+cd MURig && npm run tauri build -- --bundles app
 ```
 *(ไฟล์ `.app` ที่คอมไพล์เสร็จจะอยู่ที่ `src-tauri/target/release/bundle/macos/`)*

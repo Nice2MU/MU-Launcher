@@ -35,7 +35,7 @@ interface LauncherApp extends SavedAppMeta {
 }
 
 const DEFAULT_META: Record<string, Partial<SavedAppMeta>> = {
-  MURIG: {
+  MURig: {
     category: 'Rigging & Animation',
     description: '2D PSD Character Rigging, Mesh Skinning & Animation Studio.',
     pinned: true,
@@ -256,7 +256,7 @@ export default function App() {
           </div>
           <div>
             <div className="brand-title">MU Launcher</div>
-            <div className="brand-sub">App & Creative Tools Hub</div>
+            <div className="brand-sub">Game Development Apps & Tools</div>
           </div>
         </div>
 

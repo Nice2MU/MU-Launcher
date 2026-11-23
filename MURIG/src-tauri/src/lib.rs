@@ -73,7 +73,7 @@ async fn pick_open_psd() -> Result<Option<String>, String> {
 #[tauri::command]
 async fn pick_open_project() -> Result<Option<String>, String> {
     let out = std::process::Command::new("osascript")
-        .args(["-e", "POSIX path of (choose file with prompt \"Open MURIG Project (.murig.json)\")"])
+        .args(["-e", "POSIX path of (choose file with prompt \"Open MURig Project (.murig.json)\")"])
         .output()
         .map_err(|e| e.to_string())?;
     if !out.status.success() {
@@ -86,7 +86,7 @@ async fn pick_open_project() -> Result<Option<String>, String> {
 async fn pick_save_project(default_name: String) -> Result<Option<String>, String> {
     let safe_name = default_name.replace('"', "");
     let script = format!(
-        "POSIX path of (choose file name with prompt \"Save MURIG Project\" default name \"{safe_name}\")"
+        "POSIX path of (choose file name with prompt \"Save MURig Project\" default name \"{safe_name}\")"
     );
     let out = std::process::Command::new("osascript")
         .args(["-e", &script])
@@ -117,7 +117,7 @@ pub fn run() {
 
             let app_menu = Submenu::with_items(
                 app,
-                "MURIG",
+                "MURig",
                 true,
                 &[
                     &PredefinedMenuItem::about(app, None, None)?,
@@ -193,5 +193,5 @@ pub fn run() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running MURIG");
+        .expect("error while running MURig");
 }

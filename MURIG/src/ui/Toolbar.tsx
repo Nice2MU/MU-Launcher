@@ -210,7 +210,7 @@ export const Toolbar: React.FC = () => {
     <header className="toolbar">
       <div className="brand">
         <BoneIcon size={16} />
-        <span>MURIG</span>
+        <span>MURig</span>
       </div>
 
       <input

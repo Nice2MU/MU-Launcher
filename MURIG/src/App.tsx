@@ -60,7 +60,7 @@ export const App: React.FC = () => {
         <span>
           {activeChar
             ? `${activeChar.name} — ${activeChar.bones.length} bones, ${activeChar.parts.length} parts`
-            : 'MURIG v0.1'}
+            : 'MURig v1.0.1'}
         </span>
         <span style={{ color: 'var(--success)' }}>{mcpLog}</span>
       </footer>

@@ -41,7 +41,7 @@ fn tool_definitions() -> Value {
         "tools": [
             {
                 "name": "open_psd",
-                "description": "Load a .psd file from disk into MURIG and optionally select a character by name.",
+                "description": "Load a .psd file from disk into MURig and optionally select a character by name.",
                 "inputSchema": {
                     "type": "object",
                     "required": ["path"],
@@ -53,7 +53,7 @@ fn tool_definitions() -> Value {
             },
             {
                 "name": "open_project",
-                "description": "Load a .murig.json project file from disk into MURIG.",
+                "description": "Load a .murig.json project file from disk into MURig.",
                 "inputSchema": {
                     "type": "object",
                     "required": ["path"],
@@ -423,7 +423,7 @@ async fn handle_client(mut stream: TcpStream, app: AppHandle, pending: Arc<McpPe
                         json!({
                             "jsonrpc": "2.0",
                             "id": id,
-                            "error": { "code": -32001, "message": "MURIG frontend did not respond in time" }
+                            "error": { "code": -32001, "message": "MURig frontend did not respond in time" }
                         })
                     }
                 }
@@ -453,7 +453,7 @@ pub fn spawn_mcp_server(app: AppHandle) {
         let listener = match TcpListener::bind("127.0.0.1:7820").await {
             Ok(l) => l,
             Err(e) => {
-                eprintln!("MURIG MCP failed to bind 127.0.0.1:7820: {e}");
+                eprintln!("MURig MCP failed to bind 127.0.0.1:7820: {e}");
                 return;
             }
         };
