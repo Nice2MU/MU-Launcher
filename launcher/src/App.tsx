@@ -137,7 +137,26 @@ export default function App() {
       }
 
       merged.sort((a, b) => Number(b.pinned) - Number(a.pinned) || a.name.localeCompare(b.name));
-      setApps(merged);
+      setApps((prev) => {
+        if (
+          prev.length === merged.length &&
+          prev.every((p, i) => {
+            const n = merged[i];
+            return (
+              p.path === n.path &&
+              p.name === n.name &&
+              p.running === n.running &&
+              p.mcpOnline === n.mcpOnline &&
+              p.pinned === n.pinned &&
+              p.category === n.category &&
+              p.mcpPort === n.mcpPort
+            );
+          })
+        ) {
+          return prev;
+        }
+        return merged;
+      });
     } catch (e) {
       console.error('Failed to scan apps:', e);
     } finally {
@@ -148,9 +167,18 @@ export default function App() {
   useEffect(() => {
     void refreshApps();
     const timer = setInterval(() => {
-      void refreshApps();
+      if (!document.hidden) {
+        void refreshApps();
+      }
     }, 3000);
-    return () => clearInterval(timer);
+    const onVis = () => {
+      if (!document.hidden) void refreshApps();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVis);
+    };
   }, [refreshApps]);
 
   const handleLaunch = async (app: LauncherApp) => {

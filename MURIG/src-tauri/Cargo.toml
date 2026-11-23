@@ -1,6 +1,6 @@
 [package]
 name = "murig"
-version = "0.1.0"
+version = "1.0.1"
 description = "MURIG — 2D Character Rigging Studio"
 authors = ["MURIG"]
 edition = "2021"

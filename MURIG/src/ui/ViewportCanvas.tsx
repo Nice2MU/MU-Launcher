@@ -153,6 +153,7 @@ export const ViewportCanvas: React.FC = () => {
       appRef.current?.destroy(true);
       appRef.current = null;
       spritesRef.current.clear();
+      textureCacheRef.current.clear();
     };
   }, []);
 
@@ -214,23 +215,27 @@ export const ViewportCanvas: React.FC = () => {
     return solveRig(displayChar);
   }, [displayChar]);
 
+  // Draw canvas boundary (lightweight, runs on zoom/canvas size change without re-solving meshes)
+  useEffect(() => {
+    if (!pixiReady || !frameGfxRef.current) return;
+    const frameGfx = frameGfxRef.current;
+    frameGfx.clear();
+    if (!activeChar) return;
+    frameGfx
+      .rect(0, 0, activeChar.canvasWidth, activeChar.canvasHeight)
+      .stroke({ width: 2 / Math.max(0.05, camera.zoom), color: 0x3b4252, alpha: 0.7 });
+  }, [activeChar?.canvasWidth, activeChar?.canvasHeight, camera.zoom, pixiReady]);
+
   // Sync PixiJS sprites with active character & solved rig
   useEffect(() => {
-    if (!pixiReady || !partsLayerRef.current || !frameGfxRef.current) return;
+    if (!pixiReady || !partsLayerRef.current) return;
     const partsLayer = partsLayerRef.current;
-    const frameGfx = frameGfxRef.current;
 
-    frameGfx.clear();
     if (!activeChar || !solvedRig) {
       partsLayer.removeChildren();
       spritesRef.current.clear();
       return;
     }
-
-    // Draw canvas boundary
-    frameGfx
-      .rect(0, 0, activeChar.canvasWidth, activeChar.canvasHeight)
-      .stroke({ width: 2 / Math.max(0.05, camera.zoom), color: 0x3b4252, alpha: 0.7 });
 
     partsLayer.visible = showParts;
 
@@ -270,6 +275,7 @@ export const ViewportCanvas: React.FC = () => {
 
       const applyTransform = (obj: Sprite | MeshPlane) => {
         obj.visible = effectiveVisible;
+        if (!effectiveVisible) return;
         obj.alpha = solved.alpha;
         obj.zIndex = part.z;
 
@@ -305,7 +311,7 @@ export const ViewportCanvas: React.FC = () => {
         applyTransform(displayObj);
       }
     }
-  }, [activeChar, solvedRig, showParts, pixiReady, camera.zoom]);
+  }, [activeChar, solvedRig, showParts, pixiReady]);
 
   // Camera zoom
   const handleWheel = (e: React.WheelEvent) => {
