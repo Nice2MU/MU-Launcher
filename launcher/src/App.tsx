@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {
   FolderOpen,
-  Layers,
   Play,
   Plus,
   Search,
@@ -10,6 +9,7 @@ import {
   Star,
   Trash2,
 } from 'lucide-react';
+import launcherIcon from '../src-tauri/icons/icon.png';
 
 interface DiscoveredApp {
   name: string;
@@ -17,6 +17,7 @@ interface DiscoveredApp {
   running: boolean;
   mcpPort: number | null;
   mcpOnline: boolean;
+  iconDataUrl?: string | null;
 }
 
 interface SavedAppMeta {
@@ -32,6 +33,7 @@ interface SavedAppMeta {
 interface LauncherApp extends SavedAppMeta {
   running: boolean;
   mcpOnline: boolean;
+  iconDataUrl?: string | null;
 }
 
 const DEFAULT_META: Record<string, Partial<SavedAppMeta>> = {
@@ -118,6 +120,7 @@ export default function App() {
           mcpPort: s?.mcpPort ?? d.mcpPort ?? def?.mcpPort ?? null,
           running: d.running,
           mcpOnline: d.mcpOnline,
+          iconDataUrl: d.iconDataUrl ?? null,
         });
       }
 
@@ -149,7 +152,8 @@ export default function App() {
               p.mcpOnline === n.mcpOnline &&
               p.pinned === n.pinned &&
               p.category === n.category &&
-              p.mcpPort === n.mcpPort
+              p.mcpPort === n.mcpPort &&
+              p.iconDataUrl === n.iconDataUrl
             );
           })
         ) {
@@ -252,7 +256,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand-wrap">
           <div className="brand-icon">
-            <Layers size={20} />
+            <img src={launcherIcon} alt="MU Launcher" className="brand-icon-img" />
           </div>
           <div>
             <div className="brand-title">MU Launcher</div>
@@ -311,8 +315,15 @@ export default function App() {
             <article key={app.path} className="card">
               <div className="card-head">
                 <div className="card-title-row">
-                  <div className="app-avatar" style={{ background: avatarGradient(app.name) }}>
-                    {app.name.slice(0, 2).toUpperCase()}
+                  <div
+                    className="app-avatar"
+                    style={app.iconDataUrl ? undefined : { background: avatarGradient(app.name) }}
+                  >
+                    {app.iconDataUrl ? (
+                      <img src={app.iconDataUrl} alt={app.name} className="app-avatar-img" />
+                    ) : (
+                      app.name.slice(0, 2).toUpperCase()
+                    )}
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div className="card-title">{app.name}</div>

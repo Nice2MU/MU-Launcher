@@ -69,14 +69,21 @@ body {
 }
 
 .brand-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #ea580c, #c2410c);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  color: #fffcf8;
-  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.brand-icon-img,
+.app-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-title {
@@ -271,15 +278,16 @@ body {
 }
 
 .app-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   font-weight: 700;
   font-size: 16px;
   color: #fffcf8;
   flex-shrink: 0;
+  overflow: hidden;
   box-shadow: 0 3px 8px rgba(61, 35, 20, 0.14);
 }
 

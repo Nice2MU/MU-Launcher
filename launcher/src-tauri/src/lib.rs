@@ -12,6 +12,76 @@ struct DiscoveredApp {
     running: bool,
     mcp_port: Option<u16>,
     mcp_online: bool,
+    icon_data_url: Option<String>,
+}
+
+fn to_base64(bytes: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    for chunk in bytes.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(TABLE[((triple >> 18) & 0x3F) as usize] as char);
+        out.push(TABLE[((triple >> 12) & 0x3F) as usize] as char);
+        out.push(if chunk.len() > 1 { TABLE[((triple >> 6) & 0x3F) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { TABLE[(triple & 0x3F) as usize] as char } else { '=' });
+    }
+    out
+}
+
+fn extract_app_icon_data_url(app_path: &Path) -> Option<String> {
+    let res_dir = app_path.join("Contents").join("Resources");
+    let entries = std::fs::read_dir(&res_dir).ok()?;
+    let mut icns_path: Option<PathBuf> = None;
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if p.extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case("icns")).unwrap_or(false) {
+            icns_path = Some(p);
+            break;
+        }
+    }
+    let icns = icns_path?;
+
+    let cache_dir = std::env::temp_dir().join("mu-launcher-icons");
+    let _ = std::fs::create_dir_all(&cache_dir);
+    let safe_key: String = app_path
+        .to_string_lossy()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect();
+    let cache_png = cache_dir.join(format!("{safe_key}.png"));
+
+    let need_refresh = match (std::fs::metadata(&icns).and_then(|m| m.modified()), std::fs::metadata(&cache_png).and_then(|m| m.modified())) {
+        (Ok(src_t), Ok(dst_t)) => src_t > dst_t,
+        _ => true,
+    };
+
+    if need_refresh {
+        let status = std::process::Command::new("sips")
+            .args([
+                "-s",
+                "format",
+                "png",
+                "-z",
+                "128",
+                "128",
+                icns.to_str()?,
+                "--out",
+                cache_png.to_str()?,
+            ])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .ok()?;
+        if !status.success() {
+            return None;
+        }
+    }
+
+    let bytes = std::fs::read(&cache_png).ok()?;
+    Some(format!("data:image/png;base64,{}", to_base64(&bytes)))
 }
 
 fn hub_root() -> PathBuf {
@@ -25,6 +95,11 @@ fn hub_root() -> PathBuf {
             .and_then(|p| p.parent())
         {
             if app_parent.join("MU Launcher.app").exists() {
+                if app_parent.file_name().and_then(|s| s.to_str()) == Some("launcher") {
+                    if let Some(workspace_root) = app_parent.parent() {
+                        return workspace_root.to_path_buf();
+                    }
+                }
                 return app_parent.to_path_buf();
             }
         }
@@ -83,12 +158,14 @@ fn collect_apps(dir: &Path, depth: usize, out: &mut Vec<DiscoveredApp>) {
                 };
                 let mcp_online = mcp_port.map(is_port_open).unwrap_or(false);
                 let running = mcp_online || is_app_running(&name);
+                let icon_data_url = extract_app_icon_data_url(&path);
                 out.push(DiscoveredApp {
                     name,
                     path: path.to_string_lossy().to_string(),
                     running,
                     mcp_port,
                     mcp_online,
+                    icon_data_url,
                 });
             } else {
                 collect_apps(&path, depth + 1, out);
