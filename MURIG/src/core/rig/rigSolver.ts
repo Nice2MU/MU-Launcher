@@ -107,7 +107,7 @@ function accumulateParamOffsets(params: Param[]) {
     if (p.id === 'AngleX') angleX = p.value;
     if (p.id === 'AngleY') angleY = p.value;
 
-    for (const b of p.bindings) {
+    for (const b of p.bindings ?? []) {
       const val = evaluateBindingKeys(b.keys, p.value);
       const map = b.targetType === 'bone' ? boneOffsets : partOffsets;
       let rec = map.get(b.targetId);
@@ -376,11 +376,14 @@ export function generateAutoWeights(
     effectiveBoneId
   );
   const influenceIds = new Set<string>([effectiveBoneId]);
+  if (part.boneId && part.boneId !== effectiveBoneId) {
+    influenceIds.add(part.boneId);
+  }
   if (isBodyOrLimb) {
     for (const b of character.bones) {
       if (
-        /^(torso|body|hood|backpack|.*arm.*|.*hand.*|.*thigh.*|.*shin.*|.*leg.*|.*foot.*)$/i.test(b.id) ||
-        /^(torso|body|hood|backpack|.*arm.*|.*hand.*|.*thigh.*|.*shin.*|.*leg.*|.*foot.*)$/i.test(b.name)
+        /^(torso|body|hood|backpack|.*arm.*|.*hand.*|.*pen.*|.*weapon.*|.*thigh.*|.*shin.*|.*leg.*|.*foot.*)$/i.test(b.id) ||
+        /^(torso|body|hood|backpack|.*arm.*|.*hand.*|.*pen.*|.*weapon.*|.*thigh.*|.*shin.*|.*leg.*|.*foot.*)$/i.test(b.name)
       ) {
         influenceIds.add(b.id);
       }
@@ -389,9 +392,16 @@ export function generateAutoWeights(
     if (primary.bone.parentId && primary.bone.parentId !== 'root') {
       influenceIds.add(primary.bone.parentId);
     }
-    for (const b of character.bones) {
-      if (b.parentId === effectiveBoneId) {
-        influenceIds.add(b.id);
+    // Recursively include all descendant bones (e.g. SideTail_1 -> SideTail_2, Ahoge -> Ahoge_Tip)
+    const queue = [effectiveBoneId];
+    if (part.boneId && part.boneId !== effectiveBoneId) queue.push(part.boneId);
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      for (const b of character.bones) {
+        if (b.parentId === cur && !influenceIds.has(b.id)) {
+          influenceIds.add(b.id);
+          queue.push(b.id);
+        }
       }
     }
   }

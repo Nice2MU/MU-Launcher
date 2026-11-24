@@ -73,12 +73,23 @@ function collectLeafLayers(
   layers: Layer[] | undefined,
   groupPath: string[],
   out: RawLayerPart[],
-  zCounter: { value: number }
+  zCounter: { value: number },
+  inheritedOpacity = 1,
+  inheritedVisible = true
 ): void {
   if (!layers) return;
   for (const layer of layers) {
+    const layerOpacity = inheritedOpacity * (layer.opacity ?? 1);
+    const layerVisible = inheritedVisible && !layer.hidden;
     if (layer.children && layer.children.length > 0) {
-      collectLeafLayers(layer.children, [...groupPath, layer.name ?? 'Group'], out, zCounter);
+      collectLeafLayers(
+        layer.children,
+        [...groupPath, layer.name ?? 'Group'],
+        out,
+        zCounter,
+        layerOpacity,
+        layerVisible
+      );
     } else {
       const left = layer.left ?? 0;
       const top = layer.top ?? 0;
@@ -112,8 +123,8 @@ function collectLeafLayers(
         w: finalW,
         h: finalH,
         z: zCounter.value++,
-        visible: !layer.hidden,
-        alpha: layer.opacity ?? 1,
+        visible: layerVisible,
+        alpha: Math.max(0, Math.min(1, layerOpacity * (layer.fillOpacity ?? 1))),
         imageDataUrl: dataUrl,
       });
     }

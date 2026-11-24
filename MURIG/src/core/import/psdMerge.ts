@@ -102,6 +102,7 @@ function mergeCharacter(
         w: np.w,
         h: np.h,
         z: np.z,
+        alpha: np.alpha,
         scaleAngle: undefined, // re-detect eye tilt from updated image
         meshWeights: resampleMeshWeights(match, np),
       });
